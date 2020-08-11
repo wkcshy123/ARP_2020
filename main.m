@@ -10,7 +10,7 @@ Rad_test = 1;
 Motorart = 'EM';
 
 %% Die Excel-Datei "Fahrzyklus.xlsx" auswaehlen
-[Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = import_transmission(start);% Datei laden
+[Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = import_data(start);% Datei laden
 Fahrzyklus = eval(['RB.RB',num2str(testbench_RB),'.Fahrzyklus']);
 name_fahrzeug = fieldnames(Fahrzeug);
 name_RB = fieldnames(RB);

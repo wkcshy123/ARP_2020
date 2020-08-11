@@ -1,8 +1,8 @@
 clear 
 clc
 close all
-
 %% Fahrzyklus bewerten DEMO (Standardzyklus, Logger-Daten-H-Bus, SUMO)
+%% Standard Fahrzuklus
 load manhattan.mat
 T_manhattan = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_manhattan');
 load braunschweig.mat;
@@ -13,7 +13,7 @@ T_gesamt = [T_braunschweig, T_manhattan];
 load matlab.mat
 b = {};
 c = 1;
-% grosse Datenmenge zerlegen in ca. 3 min Ausschnitt
+% grosse Datenmenge zerlegen in ca. 3 min (1740s) Ausschnitt
 for i=1:1740:length(a)
     if i+1739 > length(a)
         b{c} = a(i:end)./3.6;
@@ -34,7 +34,7 @@ for j = 1:length(b)
 end
 
 %% Simulationsdaten aus SUMO
-% Daten loading... dauert bisschen
+% Daten loading... 
 opts = spreadsheetImportOptions("NumVariables", 8);
 opts.VariableNames = ["Var1", "timestep_time", "Var3", "vehicle_id", "Var5", "Var6", "Var7", "vehicle_speed"];
 opts.SelectedVariableNames = ["timestep_time", "vehicle_id", "vehicle_speed"];

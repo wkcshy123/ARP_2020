@@ -1,4 +1,4 @@
-function [Fahrzeug, M_kupplung, Rad, VKM, EM, RB]=import_transmission(start)
+function [Fahrzeug, M_kupplung, Rad, VKM, EM, RB]=import_data(start)
 switch start
     case 1
         [file,path] = uigetfile('*.xlsx');
