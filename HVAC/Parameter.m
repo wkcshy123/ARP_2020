@@ -1,6 +1,9 @@
 %% Parameter aus dem Paper "Novel Electric Bus Energy Consumption Model Based on Probabilistic Synthetic Speed Profile Integrated With HVAC"
-L_win = 20e-3;
-A_win = 31.8;
+% in Tabelle I und II
+T_set = 20;     % [°C]
+T_umgebung = 5; % [°C]
+L_win = 20e-3;  % [m]
+A_win = 31.8;   % [m]
 u_cwin = 0.0566;
 L_chs = 50e-3;
 A_chs = 138.2;
@@ -17,7 +20,6 @@ Ca = 0.1;
 A_dor = 1.85;
 R_p = 0.3;
 beta_pas = 1.8;
-T_set = 20;
 v_fan = 27;
 aux_leistung = 9;
 i_fan = 106;
