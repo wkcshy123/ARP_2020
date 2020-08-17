@@ -10,7 +10,7 @@ T_braunschweig = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_braunsc
 T_gesamt = [T_braunschweig, T_manhattan];
 
 %% logger-Daten des H-Bus
-load matlab.mat
+load logger-daten-H-bus.mat
 b = {};
 c = 1;
 % grosse Datenmenge zerlegen in ca. 3 min (1740s) Ausschnitt
@@ -31,6 +31,7 @@ for j = 1:length(b)
     Geschwindigkeit = timeseries(b{j},linspace(1,length(b{j}),length(b{j})));
     eval(['T_Logger',num2str(j),'=Bewertungskriterium(Geschwindigkeit, Beschleunigung, ','"T_Logger',num2str(j),'");']);
     eval(['T_gesamt = [T_gesamt,','T_Logger',num2str(j),'];']);
+    eval(['clear T_Logger',num2str(j)])
 end
 
 %% Simulationsdaten aus SUMO
@@ -54,6 +55,7 @@ for j = 1:length(SUMO)
     Geschwindigkeit = timeseries(SUMO{j}.vehicle_speed ./ 3.6, height(SUMO{j}));
     eval(['T_SUMO',num2str(j),'=Bewertungskriterium(Geschwindigkeit, Beschleunigung, ','"T_SUMO',num2str(j),'");']);
     eval(['T_gesamt = [T_gesamt,','T_SUMO',num2str(j),'];']);
+    eval(['clear T_SUMO',num2str(j)])
 end
 
 %% Transformieren

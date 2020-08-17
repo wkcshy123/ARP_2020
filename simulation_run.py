@@ -20,12 +20,15 @@ def bus_speed_visullisation(path):
             group['vehicle_id'] = name
             group['vehicle_speed'] = group['vehicle_speed'].values * 3.6
             b.append(group.reset_index())
-    for ini in b:
+    writer = pd.ExcelWriter('D:SUMO_Data.xlsx')
+    for x, ini in enumerate(b):
+        ini.to_excel(writer, sheet_name='Sheet'+str(x), index=False)
         plt.plot(ini['vehicle_speed'])
         plt.ylabel('Spped in km/h')
         plt.xlabel('time in s')
         plt.title(ini['vehicle_id'][0])
         plt.show()
+    writer.save()
 
 
 def new_report(test_report):
