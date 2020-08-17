@@ -1,4 +1,4 @@
-clear 
+clear all
 clc
 close all
 %% Fahrzyklus bewerten DEMO (Standardzyklus, Logger-Daten-H-Bus, SUMO)
@@ -40,13 +40,10 @@ opts = spreadsheetImportOptions("NumVariables", 8);
 opts.VariableNames = ["Var1", "timestep_time", "Var3", "vehicle_id", "Var5", "Var6", "Var7", "vehicle_speed"];
 opts.SelectedVariableNames = ["timestep_time", "vehicle_id", "vehicle_speed"];
 opts.VariableTypes = ["char", "double", "char", "categorical", "char", "char", "char", "double"];
-for i=0:inf
-    try
-        SUMO{1, i+1} = readtable('SUMO_Data.xlsx',opts, 'sheet', ['sheet',num2str(i)]);
-        SUMO{1, i+1}(1,:) = [];
-    catch
-        break
-    end
+[~, sheet, ~]=xlsfinfo('SUMO_Data.xlsx');
+parfor i=0:length(sheet)-1
+    SUMO{1, i+1} = readtable('SUMO_Data.xlsx',opts, 'sheet', ['sheet',num2str(i)]);
+    SUMO{1, i+1}(1,:) = [];   
 end
 % Analyse
 for j = 1:length(SUMO)
