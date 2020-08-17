@@ -58,8 +58,22 @@ title('Leistung in [W]');
 xlabel('Zeit in s');
 
 %% Motorleistung in zwei Gruppen teilen, Verbrauchen/Regeneration
+%% eta sollte kein Festwert sein !!!!!!!!!!!!!
 Motor_antrieb = P_motor;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
+%% Motor Map 
+for i =1:length(omega)
+    map(i,1) = omega(i)*9.5*i_F(i);
+    map(i,2) = T_Bedarf(i)/i_F(i);
+end
+map(:,2) = normalize(map(:,2),'range',[-1,1]);
+figure
+scatter(map(:,1),map(:,2),10)
+xlim([0 2500])
+title('Motor map')
+ylabel('Motor torque normalized')
+xlabel('Motor speed [rpm]')
+%% Motor-Leitung und regerative-Leistung
 if strcmp(Motorart, 'EM')
     for i=1:length(Motor_antrieb)
         if Motor_antrieb(i)<0
@@ -93,6 +107,7 @@ Energie_aux_kwh_per_km = Energie_aux / kmzahl                      % Aux-Verbrau
 Energie_HVAC_kwh_per_km = (Energie_hvac_kwh_per_km/EM.EM1.eta/eta_hvac) + Energie_fan_kwh_per_km  % gesamte HVAC-verbrauchen per km [kwh/km]
 
 %% Die Empfindlichkeit des HVAC gegen Temperatur Aenderung
+
 T_umgebung_list = (-40:5:40);
 for i = 1:length(T_umgebung_list)
     T_umgebung = T_umgebung_list(i);
@@ -101,5 +116,10 @@ for i = 1:length(T_umgebung_list)
 end
 figure
 bar(T_umgebung_list, Energie_hvac_kwh_per_km)
+xlabel('Aussen Temperatur [°C]')
+ylabel('HVAC Verbrauchen [kwh/km]')
+title('Empfindlichkeit des HVAC-Verbrauchen gegen Temperatur Aenderung')
+
+
 
 
