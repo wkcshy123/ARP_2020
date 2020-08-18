@@ -6,6 +6,26 @@ Beschleunigung = resample(Beschleunigung,1:1:1089);
 
 
 
+b = gradient(Position.speed);
+Geschwindigkeit = timeseries(Position.speed);
+Beschleunigung = timeseries(gradient(Geschwindigkeit.data));
+Beschleunigung.data = circshift(Beschleunigung.Data,-1);
+
+a = Position.speed.*3.6;
+b = gradient(Position.speed);
+b = b-min(b);
+c = exp(b);
+geoscatter(Position.latitude,Position.longitude,c,a,'LineWidth',1)
+
+
+load R-Bus_diesel.mat;
+plot(Geschwindigkeit)
+hold on
+load('braunschweig.mat')
+plot(Geschwindigkeit);
+ylabel('Geschwindigkeit in m/s')
+
+
 subplot(3,1,1)
 plot(Geschwindigkeit)
 title('Braunschweig')

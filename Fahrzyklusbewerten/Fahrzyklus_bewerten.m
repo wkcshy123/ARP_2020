@@ -8,7 +8,12 @@ T_manhattan = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_manhattan'
 load braunschweig.mat;
 T_braunschweig = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_braunschweig');
 T_gesamt = [T_braunschweig, T_manhattan];
-
+load L-Bus_elektrisch.mat;
+T_L_Bus = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_L_Bus');
+T_gesamt = [T_gesamt, T_L_Bus];
+load R-Bus_diesel.mat;
+T_R_Bus = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_R_Bus');
+T_gesamt = [T_gesamt, T_R_Bus];
 %% logger-Daten des H-Bus
 load logger-daten-H-bus.mat
 b = {};
