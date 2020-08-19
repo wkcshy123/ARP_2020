@@ -1,4 +1,4 @@
-function [F_C, G] = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung)
+function F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung)
 Traegmoment_Rad_Get_Ab = Fahrzeug.J_Get_Ab_Rad; % Traegeheitsmoment von Getriebe bis Rad 
 Traegmoment_Get_An = Fahrzeug.J_Get_An; 
 Traegmoment_EM = zeros(1,length(fieldnames(EM))); 
