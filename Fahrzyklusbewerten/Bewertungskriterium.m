@@ -71,7 +71,6 @@ T{'Number of stops',name} = num_stop;
 T{'Stops per km Average',name} = 1000* num_stop / T{'Total distance',name};
 T{'stop duration',name} = T{'Standing time',name} / T{'Number of stops',name};
 
-abschnitt = {};
 abschnitt_anzahl = 1;
 Takt = false;
 a = ~((Beschleunigung.data == 0) & (Geschwindigkeit.data == 0));

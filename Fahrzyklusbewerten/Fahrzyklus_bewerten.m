@@ -2,6 +2,9 @@ clear all
 clc
 close all
 %% Fahrzyklus bewerten DEMO (Standardzyklus, Logger-Daten-H-Bus, SUMO)
+% Jede *.mat Datei besteht aus 2 Variabel (Geschwindigkeit, Beschleunigung)
+% und beide im Form von "timeseries"
+
 %% Standard Fahrzuklus
 load manhattan.mat
 T_manhattan = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_manhattan');
@@ -16,24 +19,24 @@ T_R_Bus = Bewertungskriterium(Geschwindigkeit, Beschleunigung, 'T_R_Bus');
 T_gesamt = [T_gesamt, T_R_Bus];
 %% logger-Daten des H-Bus
 load logger-daten-H-bus.mat
-b = {};
-c = 1;
+fahrzyklus_ausschnitt = {};
+anzahl = 1;
 % grosse Datenmenge zerlegen in ca. 3 min (1740s) Ausschnitt
-for i=1:1740:length(a)
-    if i+1739 > length(a)
-        b{c} = a(i:end)./3.6;
-        b{c}(isnan(b{c})==1) = 0;
+for i=1:1740:length(Geschwindigkeit)
+    if i+1739 > length(Geschwindigkeit)
+        fahrzyklus_ausschnitt{anzahl} = Geschwindigkeit(i:end)./3.6;
+        fahrzyklus_ausschnitt{anzahl}(isnan(fahrzyklus_ausschnitt{anzahl})==1) = 0;
     else
-        b{c} = a(i:i+1739)./3.6;
-        b{c}(isnan(b{c})==1) = 0;
-        c = c + 1;
+        fahrzyklus_ausschnitt{anzahl} = Geschwindigkeit(i:i+1739)./3.6;
+        fahrzyklus_ausschnitt{anzahl}(isnan(fahrzyklus_ausschnitt{anzahl})==1) = 0;
+        anzahl = anzahl + 1;
     end
 end
 % Analyse
-for j = 1:length(b)
-    c = gradient(b{j});
-    Beschleunigung= timeseries(circshift(c,-1),linspace(1,length(b{j}),length(b{j})));
-    Geschwindigkeit = timeseries(b{j},linspace(1,length(b{j}),length(b{j})));
+for j = 1:length(fahrzyklus_ausschnitt)
+    anzahl = gradient(fahrzyklus_ausschnitt{j});
+    Beschleunigung= timeseries(circshift(anzahl,-1),linspace(1,length(fahrzyklus_ausschnitt{j}),length(fahrzyklus_ausschnitt{j})));
+    Geschwindigkeit = timeseries(fahrzyklus_ausschnitt{j},linspace(1,length(fahrzyklus_ausschnitt{j}),length(fahrzyklus_ausschnitt{j})));
     eval(['T_Logger',num2str(j),'=Bewertungskriterium(Geschwindigkeit, Beschleunigung, ','"T_Logger',num2str(j),'");']);
     eval(['T_gesamt = [T_gesamt,','T_Logger',num2str(j),'];']);
     eval(['clear T_Logger',num2str(j)])
@@ -52,8 +55,8 @@ parfor i=0:length(sheet)-1
 end
 % Analyse
 for j = 1:length(SUMO)
-    c = gradient(SUMO{j}.vehicle_speed ./ 3.6);
-    Beschleunigung= timeseries(circshift(c,-1), height(SUMO{j}));
+    Beschleunigung = gradient(SUMO{j}.vehicle_speed ./ 3.6);
+    Beschleunigung= timeseries(circshift(Beschleunigung,-1), height(SUMO{j}));
     Geschwindigkeit = timeseries(SUMO{j}.vehicle_speed ./ 3.6, height(SUMO{j}));
     eval(['T_SUMO',num2str(j),'=Bewertungskriterium(Geschwindigkeit, Beschleunigung, ','"T_SUMO',num2str(j),'");']);
     eval(['T_gesamt = [T_gesamt,','T_SUMO',num2str(j),'];']);

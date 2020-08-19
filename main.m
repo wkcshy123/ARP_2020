@@ -9,7 +9,7 @@ Fahrzeug_test = 1;
 Rad_test = 1;
 Motorart = 'EM';
 
-%% Die Excel-Datei "Fahrzyklus.xlsx" auswaehlen
+% Die Excel-Datei "Fahrzyklus.xlsx" auswaehlen
 [Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = import_data(start);% Datei laden
 Fahrzyklus = eval(['RB.RB',num2str(testbench_RB),'.Fahrzyklus']);
 name_fahrzeug = fieldnames(Fahrzeug);
@@ -20,6 +20,8 @@ RB = RB.(name_RB{testbench_RB});
 Rad = Rad.(name_Rad{Rad_test});
 
 load(Fahrzyklus)                                        % laden Fahrzyklusdatei
+% Daten smooth sehr wichtig, bei L-Bus vor dem Somooth 1.9kwh/km, danach
+% 1.5kwh/km Antriebenergieverbrauch
 Beschleunigung = gradient(Geschwindigkeit.data);        % die Beschleunigung berechnen 
 Wegstrecke = trapz(Geschwindigkeit.data);
 
@@ -29,16 +31,16 @@ omega = Geschwindigkeit.data ./ Rad.r_dyn;              % Rotationsgeschwindigke
 i_F = schalten(Fahrzeug, v_km_h);                       % Schalten(Uebersetzung) im Fahrzyklus [-]
 
 %% Die Widerst?nde Berechnen
-F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);
-F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h);
-F_St =Steigungswiderstand(Fahrzeug, RB);
-[F_C, G] = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung);
+F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);    % Luftwiderstand
+F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h);        % Rollwiderstand
+F_St =Steigungswiderstand(Fahrzeug, RB);                % Steigungswiderstand
+[F_C, G] = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung); % Beschleunigungswiderstand
 
 %% Antriebskraft berechnen
 F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskraft des Fahrzeugs [N]
 T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Antriebsmoment des Fahrzeugs [Nm]
-P_motor = F_Bedarf .* Geschwindigkeit.data;
-%P_motor_unknow = Leistung(VKM, EM, Geschwindigkeit, F_Bedarf, G); % Die Leistung des Motors berechnen
+P_motor = F_Bedarf .* Geschwindigkeit.data;             % Die Leistung des Motors berechnen [w]
+%P_motor_unknow = Leistung(VKM, EM, Geschwindigkeit, F_Bedarf, G); 
 
 subplot(4,1,1);
 plot(T_Bedarf);
@@ -61,19 +63,21 @@ xlabel('Zeit in s');
 %% eta sollte kein Festwert sein !!!!!!!!!!!!!
 Motor_antrieb = P_motor;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
-%% Motor Map 
+%% Motor Map zeichnen
 for i =1:length(omega)
-    map(i,1) = omega(i)*9.5*i_F(i);
-    map(i,2) = T_Bedarf(i)/i_F(i);
+    map(i,1) = omega(i)*9.5*i_F(i);     % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
+    map(i,2) = T_Bedarf(i)/i_F(i);      % Motor Drehmoment
 end
-map(:,2) = normalize(map(:,2),'range',[-1,1]);
+map(:,2) = normalize(map(:,2),'range',[-1,1]);  % Motor Drehmoment normalisieren
 figure
-scatter(map(:,1),map(:,2),10)
+scatter(map(:,1),map(:,2),10)                   % Scattermap zeichnen
 xlim([0 2500])
 title('Motor map')
 ylabel('Motor torque normalized')
 xlabel('Motor speed [rpm]')
-%% Motor-Leitung und regerative-Leistung
+%% Motor-Energie und regerative-Energie
+% Fehlt noch Kennfeld des Motors!!!!!!!!!!!!!
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(Motorart, 'EM')
     for i=1:length(Motor_antrieb)
         if Motor_antrieb(i)<0
@@ -81,16 +85,12 @@ if strcmp(Motorart, 'EM')
             Motor_antrieb(i) = 0;
         end
     end
-    Energie_reg = trapz(Motor_regenerativ) * EM.EM1.eta_reg; % regenerative Leistung [ws]
-    Energie_antrieb = trapz(Motor_antrieb) / EM.EM1.eta;     % Antriebsleistung [ws]
+    Energie_reg = trapz(Motor_regenerativ) * EM.EM1.eta_reg; % regenerative Energie [ws]
+    Energie_antrieb = trapz(Motor_antrieb) / EM.EM1.eta;     % Antriebsenergie [ws]
 else
-    Energie_reg = 0;                                                              % regenerative Leistung [ws]
-    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsleistung [ws]
+    Energie_reg = 0;                                                              % regenerative Energie spielt keine Rolle beim VKM
+    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws]
 end
-
-%% Fehlt noch Kennfeld des Motors!!!!!!!!!!!!!
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 kmzahl = Wegstrecke / 1000;                              % Kilometerstand [km]
 Energie_antrieb_kwh_per_km = Energie_antrieb / 3600000 / kmzahl  % Antriebsverbrauch per km [kmh/km] 
@@ -107,15 +107,15 @@ Energie_aux_kwh_per_km = Energie_aux / kmzahl                      % Aux-Verbrau
 Energie_HVAC_kwh_per_km = (Energie_hvac_kwh_per_km/EM.EM1.eta/eta_hvac) + Energie_fan_kwh_per_km  % gesamte HVAC-verbrauchen per km [kwh/km]
 
 %% Die Empfindlichkeit des HVAC gegen Temperatur Aenderung
-
-T_umgebung_list = (-40:5:40);
-for i = 1:length(T_umgebung_list)
+T_umgebung_list = (-40:5:40);                   % Aussentemperaturbereich als -40~40
+Energie_hvac_kwh_per_km_empfindlichkeit_gegen_Temp = zeros(1,length(T_umgebung_list));
+for i = 1:length(T_umgebung_list)               % fuer jede Temperatur einmal simulieren daimt wird fuer jede Temperatur ein Energieverbrauch errechnet
     T_umgebung = T_umgebung_list(i);
     out = sim('HVAC.slx','StopTime',t_end);
-    Energie_hvac_kwh_per_km(i) = abs(out.simout.data(end)/3600/kmzahl/EM.EM1.eta/eta_hvac)+ Energie_fan_kwh_per_km; % HVAC-verbrauchen per km [kwh/km]
+    Energie_hvac_kwh_per_km_empfindlichkeit_gegen_Temp(i) = abs(out.simout.data(end)/3600/kmzahl/EM.EM1.eta/eta_hvac)+ Energie_fan_kwh_per_km; % HVAC-verbrauchen per km [kwh/km]
 end
 figure
-bar(T_umgebung_list, Energie_hvac_kwh_per_km)
+bar(T_umgebung_list, Energie_hvac_kwh_per_km_empfindlichkeit_gegen_Temp)
 xlabel('Aussen Temperatur [°C]')
 ylabel('HVAC Verbrauchen [kwh/km]')
 title('Empfindlichkeit des HVAC-Verbrauchen gegen Temperatur Aenderung')

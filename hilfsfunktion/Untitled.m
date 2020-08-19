@@ -1,10 +1,10 @@
 a = table2array(braunschweig);
 Geschwindigkeit = timeseries(a(:,2),a(:,1))./3.6;
-Beschleunigung = timeseries(gradient(Geschwindigkeit.data),Geschwindigkeit.time);
+Beschleunigung = timeseries(gradient(Geschwindigkeit.data));
 Geschwindigkeit = resample(Geschwindigkeit,1:1:1089);
 Beschleunigung = resample(Beschleunigung,1:1:1089);
 
-
+Beschleunigung.Data = filloutliers(Beschleunigung.Data,'next');
 
 b = gradient(Position.speed);
 Geschwindigkeit = timeseries(Position.speed);
