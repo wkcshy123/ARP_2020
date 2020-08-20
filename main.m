@@ -40,8 +40,8 @@ F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschle
 
 %% Antriebskraft berechnen
 F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskraft des Fahrzeugs [N]
-T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Antriebsmoment des Fahrzeugs [Nm]
-P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung [w]
+T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Reifenmoment des Fahrzeugs [Nm]
+P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung auf Reifen [w]
 %P_motor_unknow = Leistung(VKM, EM, Geschwindigkeit, F_Bedarf, G); 
 
 subplot(4,1,1);
@@ -65,14 +65,14 @@ xlabel('Zeit in s');
 Motor_antrieb = P_bedarf;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
 %% Motor Map zeichnen
-map(:,1) = omega.*9.5.*i_F;     % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
-map(:,2) = T_Bedarf./i_F;       % Motor Drehmoment (noch ./ eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-map(:,2) = normalize(map(:,2),'range',[-1,1]);  % Motor Drehmoment normalisieren
+map(:,1) = omega.*9.5.*i_F;          % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
+map(:,2) = T_Bedarf./i_F./0.9;       % Motor Drehmoment (noch ./ eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%map(:,2) = normalize(map(:,2),'range',[-1,1]);  % Motor Drehmoment normalisieren
 figure
 scatter(map(:,1),map(:,2),10)                   % Scattermap zeichnen
-xlim([0 2500])
+%xlim([0 2500])
 title('Motor map')
-ylabel('Motor torque normalized')
+ylabel('Motor torque')
 xlabel('Motor speed [rpm]')
 
 %% Motor-Energie und regerative-Energie
@@ -85,8 +85,8 @@ if strcmp(Motorart, 'EM')
             Motor_antrieb(i) = 0;
         end
     end
-    Energie_reg = trapz(Motor_regenerativ) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Energie_antrieb = trapz(Motor_antrieb) / EM.EM1.eta;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_reg = trapz(Motor_regenerativ) * EM.EM1.eta_reg * 0.9; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_antrieb = trapz(Motor_antrieb) / EM.EM1.eta / 0.9;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
     Energie_reg = 0;                                                              % regenerative Energie spielt keine Rolle beim VKM
     Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
