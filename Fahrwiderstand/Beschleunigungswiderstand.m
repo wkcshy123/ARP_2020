@@ -1,4 +1,4 @@
-function F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung)
+function F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung, Fahrgaeste)
 Traegmoment_Rad_Get_Ab = Fahrzeug.J_Get_Ab_Rad; % Traegeheitsmoment von Getriebe bis Rad 
 Traegmoment_Get_An = Fahrzeug.J_Get_An; 
 Traegmoment_EM = zeros(1,length(fieldnames(EM))); 
@@ -55,6 +55,6 @@ Traegmoment_EM_sum = sum(Traegmoment_EM);
 J_Red_Ab = Traegmoment_Rad_Get_Ab + (Traegmoment_Get_An ...
     + Traegmoment_EM_sum + Traegmoment_VKM_sum) * i_F .^ 2; % reduzierte Tr¨¢egheitsmoment auf den Abtrieb [kg/m^2]
 
-lambda = 1+ (J_Red_Ab / (Fahrzeug.m_F * Rad.r_dyn^2)); % Massenzuschlagfaktor [-]
-F_C = (Fahrzeug.m_F * lambda) .* Beschleunigung;       % Beschleunigungswiderstand [N]
+lambda = 1+ (J_Red_Ab ./ ((Fahrzeug.m_F + Fahrgaeste.Data.*60) .* Rad.r_dyn^2)); % Massenzuschlagfaktor [-]
+F_C = ((Fahrzeug.m_F + Fahrgaeste.Data.*60) .* lambda) .* Beschleunigung;       % Beschleunigungswiderstand [N]
 end

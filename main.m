@@ -1,15 +1,12 @@
 clear all
 clc
 close all
-% Linie 68, 87, 88, 91 noch eta_getriebe hinzufügen 
 % Motorkennfeld!!!!!!!
-% steigungswiderstand
 %% Die Datei Laden
 start = 1;
 testbench_RB = 1;
 Fahrzeug_test = 1;
 Rad_test = 1;
-Motorart = 'EM';
 
 % Die Excel-Datei "Fahrzyklus.xlsx" auswaehlen
 [Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = import_data(start);% Datei laden
@@ -20,23 +17,45 @@ name_Rad = fieldnames(Rad);
 Fahrzeug = Fahrzeug.(name_fahrzeug{Fahrzeug_test});
 RB = RB.(name_RB{testbench_RB});
 Rad = Rad.(name_Rad{Rad_test});
+Motorart = Fahrzeug.Antriebsart;
 
 load(Fahrzyklus)                                        % laden Fahrzyklusdatei
 % Daten smooth sehr wichtig, bei L-Bus vor dem Somooth 1.9kwh/km, danach
 % 1.5kwh/km Antriebenergieverbrauch
 Beschleunigung = gradient(Geschwindigkeit.data);        % die Beschleunigung berechnen 
 Wegstrecke = trapz(Geschwindigkeit.data);
+if ~exist('Fahrgaeste','var')
+    Fahrgaeste = timeseries(12, Geschwindigkeit.Time);  % Fahrgästeanzahl   [-]
+end
+%% Steigungsdaten
+Accumulativ_Wegstrecke = cumtrapz(Geschwindigkeit.data); 
+Steigung = zeros(length(Accumulativ_Wegstrecke),1);
+if exist('Latitude','var')
+    Position.latitude = Latitude;
+    Position.longitude = Longitude;
+    elevation_hgt = get_hgt_elevation(Position);            % Höhe Daten erhalten 
+    for i=1:20:length(Accumulativ_Wegstrecke)
+        if i+20 > length(Accumulativ_Wegstrecke)
+            Steigung(i,1) = atan((elevation_hgt(end)-elevation_hgt(i))/(Accumulativ_Wegstrecke(end)-Accumulativ_Wegstrecke(i)));
+            break
+        end
+        Steigung(i,1) = atan((elevation_hgt(i+20)-elevation_hgt(i))/(Accumulativ_Wegstrecke(i+20)-Accumulativ_Wegstrecke(i)));
+    end
+    Steigung(Steigung==0)=nan;
+    Steigung = fillmissing(Steigung,'nearest');
+    Steigung(i:end) = mean(Steigung);
+end
 
 %% Umrechnen      
 v_km_h = Geschwindigkeit.data .* 3.6;                   % Fahrzeuggeschwindigkeit in km/h [km/h]
 omega = Geschwindigkeit.data ./ Rad.r_dyn;              % Rotationsgeschwindigkeit des Rads [rad/s]
-i_F = schalten(Fahrzeug, v_km_h);                       % Schalten(Uebersetzung) im Fahrzyklus [-]
+[i_F, wirkungsgrad_getriebe] = schalten(Fahrzeug, v_km_h);                       % Schalten(Uebersetzung) im Fahrzyklus [-]
 
 %% Die Widerst?nde Berechnen
 F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);    % Luftwiderstand
-F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h);        % Rollwiderstand
-F_St =Steigungswiderstand(Fahrzeug, RB);                % Steigungswiderstand
-F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung); % Beschleunigungswiderstand
+F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h, Fahrgaeste, Steigung);        % Rollwiderstand
+F_St =Steigungswiderstand(Fahrzeug, RB, Fahrgaeste, Steigung);                % Steigungswiderstand
+F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung, Fahrgaeste); % Beschleunigungswiderstand
 
 %% Antriebskraft berechnen
 F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskraft des Fahrzeugs [N]
@@ -65,16 +84,27 @@ xlabel('Zeit in s');
 Motor_antrieb = P_bedarf;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
 %% Motor Map zeichnen
-map(:,1) = omega.*9.5.*i_F;          % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
-map(:,2) = T_Bedarf./i_F./0.9;       % Motor Drehmoment (noch ./ eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%map(:,2) = normalize(map(:,2),'range',[-1,1]);  % Motor Drehmoment normalisieren
+map(:,1) = omega.*9.5.*i_F;                            % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
+map(:,2) = T_Bedarf./i_F./wirkungsgrad_getriebe;       % Motor Drehmoment (noch ./ eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%map(:,2) = normalize(map(:,2),'range',[-1,1]);        % Motor Drehmoment normalisieren
 figure
-scatter(map(:,1),map(:,2),10)                   % Scattermap zeichnen
+scatter(map(:,1),map(:,2),10)                          % Scattermap zeichnen
 %xlim([0 2500])
 title('Motor map')
 ylabel('Motor torque')
 xlabel('Motor speed [rpm]')
 
+% if strcmp(Fahrzeug.Antriebsart, 'VKM')
+%     load VKM-map.mat
+%     ....
+%     for i=1:length(Geschwindigkeit.Data)
+%     end
+% else
+%     load EM-map.mat
+%     ....
+%     for i=1:length(Geschwindigkeit.Data)
+%     end
+% end
 %% Motor-Energie und regerative-Energie
 % Fehlt noch Kennfeld des Motors!!!!!!!!!!!!!
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,11 +115,11 @@ if strcmp(Motorart, 'EM')
             Motor_antrieb(i) = 0;
         end
     end
-    Energie_reg = trapz(Motor_regenerativ) * EM.EM1.eta_reg * 0.9; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Energie_antrieb = trapz(Motor_antrieb) / EM.EM1.eta / 0.9;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_reg = trapz(Motor_regenerativ .* wirkungsgrad_getriebe) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_antrieb = trapz(Motor_antrieb ./ wirkungsgrad_getriebe) / EM.EM1.eta;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
     Energie_reg = 0;                                                              % regenerative Energie spielt keine Rolle beim VKM
-    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0) ./ wirkungsgrad_getriebe(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
 kmzahl = Wegstrecke / 1000;                                      % Kilometerstand [km]

@@ -106,5 +106,44 @@ for i=1:80
     end
 end
 
+%% fahrgaeste L-elektrisch
+Position{:,'passenger'}=0;
+Position{1:203, 'passenger'} = 21;
+Position{206:235, 'passenger'} = 22;
+Position{237:330, 'passenger'} = 23;
+Position{332:423, 'passenger'} = 20;
+Position{425:530, 'passenger'} = 16;
+Position{531:end, 'passenger'} = 6;
+
+
+%% fahrgaeste R-diesel
+Position{:,'passenger'}=0;
+Position{1:92, 'passenger'} = 7;
+Position{93:162, 'passenger'} = 8;
+Position{163:211, 'passenger'} = 9;
+Position{212:288, 'passenger'} = 11;
+Position{289:381, 'passenger'} = 12;
+Position{382:477, 'passenger'} = 17;
+Position{478:540, 'passenger'} = 15;
+Position{541:697, 'passenger'} = 17;
+Position{698:894, 'passenger'} = 12;
+Position{895:981, 'passenger'} = 10;
+Position{982:1071, 'passenger'} = 11;
+Position{1073:1116, 'passenger'} = 12;
+Position{1117:1236, 'passenger'} = 10;
+Position{1237:1339, 'passenger'} = 12;
+Position{1340:1406, 'passenger'} = 13;
+Position{1407:1469, 'passenger'} = 12;
+Position{1470:end, 'passenger'} = 14;
+
+
+%% 
+for i=1:length(Q)-1
+    a(i) = atan((elevation_hgt(i+1)-elevation_hgt(i))/(Q(i+1)-Q(i)));
+end
+
+
+
+
 
 
