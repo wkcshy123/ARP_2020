@@ -28,5 +28,6 @@ i_fan = 106;
 eta_hvac = 2;
 R_eq = 1./(L_win/(A_win*u_cwin) + L_chs/(A_chs * u_chs) + 1./(h_cext.*A) +1/(A * h_cint)); 
 R_eq = timeseries(R_eq,Geschwindigkeit.time);
-
+min_zeitintervall_haltestellen = 60;
+haltezeit = 10;
 

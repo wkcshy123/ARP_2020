@@ -1,5 +1,5 @@
 %==========================================================================
-function elevation_hgt=get_hgt_elevation(DriveData,ploton)
+function elevation_hgt=GetHgtElevation(DriveData,ploton)
 %==========================================================================
 %performs an interpolation of the topology data of the Radio Shuttle
 %Topology Mission (RSTM) to estimate the elevation for given longitude and
@@ -13,7 +13,7 @@ if nargin < 2
 end
 
 %---define source folder for elevation data in .hgt format
-elevation_data_folder = [pwd+'/ele_hgt_data'];
+elevation_data_folder = [pwd,'/ele_hgt_data'];
 
 %---initialize old file name
 corr_hgt_file_old='';

@@ -12,10 +12,10 @@ i_F = zeros(length(v), 1);
 wirkungsgrad_getriebe = zeros(length(v), 1);
 for i = 1 : Ganganzahl
     if i ~= Ganganzahl
-        mask = (v > v_Anfang) & (v <= v_Anfang + 20);
+        mask = (v > v_Anfang) & (v <= v_Anfang +15);
         i_F(mask) = Fahrzeug.i_Get(i);
         wirkungsgrad_getriebe(mask) = Fahrzeug.eta_getriebe(i);
-        v_Anfang = v_Anfang + 20;
+        v_Anfang = v_Anfang + 15;
     else
         mask = v > v_Anfang;
         i_F(mask) = Fahrzeug.i_Get(i);

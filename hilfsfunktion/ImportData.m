@@ -1,4 +1,4 @@
-function [Fahrzeug, M_kupplung, Rad, VKM, EM, RB]=import_data(start)
+function [Fahrzeug, M_kupplung, Rad, VKM, EM, RB]=ImportData(start)
 switch start
     case 1
         [file,path] = uigetfile('*.xlsx');
@@ -20,8 +20,8 @@ switch start
 end
 
     function [Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = read_transmission(xlsname)
-        xlRange_data={'D2:D10', 'D2:G5','D2:D4', 'D2:D5', 'D2:D6', 'D2:G6'};
-        xlRange_label={'C3:C10', 'C3:C5','C3:C4', 'C3:C5', 'C3:C6', 'C3:C6'};
+        xlRange_data={'D2:D11', 'D2:G5','D2:D4', 'D2:D5', 'D2:D6', 'D2:G6'};
+        xlRange_label={'C3:C11', 'C3:C5','C3:C4', 'C3:C5', 'C3:C6', 'C3:C6'};
         sheet_idx=[1,2,3,4,5,6];
         raw=cell(2,6);
         for xx=1:6

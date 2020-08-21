@@ -142,7 +142,28 @@ for i=1:length(Q)-1
     a(i) = atan((elevation_hgt(i+1)-elevation_hgt(i))/(Q(i+1)-Q(i)));
 end
 
-
+takt = false;
+halt = zeros(length(Geschwindigkeit.Data),1);
+for i=1:length(Geschwindigkeit.Data)-5
+    if ~mod(i,60)
+        takt = true;
+    end
+    if mean(Geschwindigkeit.Data(i:i+5))<0.1 && takt
+        halt(i+1) = 1;
+        takt = false;
+    end
+end
+a = find(halt);
+for j=1:length(a)-1
+    if a(j+1)-a(j)<=60
+        a(j+1) = a(j);
+    end
+end
+a = unique(a);
+b = zeros(length(halt),1);
+for i=1:length(a)
+    b(a(i):a(i)+10) = 1;
+end
 
 
 
