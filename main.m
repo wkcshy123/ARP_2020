@@ -9,7 +9,7 @@ Fahrzeug_test = 1;
 Rad_test = 1;
 
 % Die Excel-Datei "Fahrzyklus.xlsx" auswaehlen
-[Fahrzeug, M_kupplung, Rad, VKM, EM, RB] = ImportData(start);% Datei laden
+[Fahrzeug, ~, Rad, VKM, EM, RB] = ImportData(start);% Datei laden
 Studycase = eval(['RB.RB',num2str(testbench_RB),'.Fahrzyklus']);
 name_fahrzeug = fieldnames(Fahrzeug);
 name_RB = fieldnames(RB);
@@ -40,22 +40,23 @@ omega = Geschwindigkeit.data ./ Rad.r_dyn;              % Rotationsgeschwindigke
 %% Die Widerst?nde Berechnen
 F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);    % Luftwiderstand
 F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h, Fahrgaeste, Steigung);        % Rollwiderstand
-F_St =Steigungswiderstand(Fahrzeug, RB, Fahrgaeste, Steigung);                % Steigungswiderstand
-F_C = Beschleunigungswiderstand(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung, Fahrgaeste); % Beschleunigungswiderstand
+F_St = Steigungswiderstand(Fahrzeug, RB, Fahrgaeste, Steigung);                % Steigungswiderstand
+%F_C = Beschleunigungswiderstand1(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung, Fahrgaeste); % Beschleunigungswiderstand
+F_C = Beschleunigungswiderstand(Fahrzeug, Beschleunigung, Fahrgaeste);
 
 %% Antriebskraft berechnen
 F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskraft des Fahrzeugs [N]
 T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Reifenmoment des Fahrzeugs [Nm]
-P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung auf Reifen [w]
+P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung auf Reifen [W]
 %P_motor_unknow = Leistung(VKM, EM, Geschwindigkeit, F_Bedarf, G); 
 
 subplot(5,1,1);
 plot(T_Bedarf);
-title('T_Bedarf vs t in [Nm]');
+title('T-Bedarf vs t in [Nm]');
 xlabel('Zeit in s');
 subplot(5,1,2);
-plot(omega);
-title('omega_reifen vs t in [rad/s]');
+plot(omega .* 9.5);
+title('omega-reifen vs t in [rpm]');
 xlabel('Zeit in s');
 subplot(5,1,3);
 plot(v_km_h);
@@ -74,12 +75,11 @@ xlabel('Zeit in s');
 Motor_antrieb = P_bedarf;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
 %% Motor Map zeichnen
-map(:,1) = omega * 9.5 .* i_F .* Fahrzeug.i_main_reducer;                            % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
+map(:,1) = omega * 9.5 .* i_F .* Fahrzeug.i_main_reducer;                             % Motor Drehzahl (9.5 ist der Faktor von rad/s zu rpm) 
 map(:,2) = T_Bedarf ./ i_F ./ Fahrzeug.i_main_reducer ./ wirkungsgrad_getriebe;       % Motor Drehmoment (noch ./ eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %map(:,2) = normalize(map(:,2),'range',[-1,1]);        % Motor Drehmoment normalisieren
 figure
 scatter(map(:,1),map(:,2),10)                          % Scattermap zeichnen
-%xlim([0 2500])
 title('Motor map')
 ylabel('Motor torque [Nm]')
 xlabel('Motor speed [rpm]')
@@ -88,11 +88,13 @@ xlabel('Motor speed [rpm]')
 %     load VKM-map.mat
 %     ....
 %     for i=1:length(Geschwindigkeit.Data)
+%           wirkungsgrad_getriebe(i) = VKM_map(map(i, 1), map(i, 2));
 %     end
 % else
 %     load EM-map.mat
 %     ....
 %     for i=1:length(Geschwindigkeit.Data)
+%           ....
 %     end
 % end
 %% Motor-Energie und regerative-Energie
@@ -107,7 +109,7 @@ if strcmp(Motorart, 'EM')
     end
     Energie_reg = trapz(Motor_regenerativ .* wirkungsgrad_getriebe) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     Energie_antrieb = trapz(Motor_antrieb ./ wirkungsgrad_getriebe) / EM.EM1.eta;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-else
+elseif strcmp(Motorart, 'VKM')
     Energie_reg = 0;                                                                  % regenerative Energie spielt keine Rolle beim VKM
     Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0) ./ wirkungsgrad_getriebe(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
