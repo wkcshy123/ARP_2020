@@ -107,7 +107,10 @@ if strcmp(Motorart, 'EM')
             Motor_antrieb(i) = 0;
         end
     end
-    Energie_reg = trapz(Motor_regenerativ .* wirkungsgrad_getriebe) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % vorraussetzung1: v>5.0km/h  (anhand der Doktorarbeit)
+    % vorraussetzung2: -4m/s^2<a<0
+    Motor_regenerativ = Motor_regenerativ(Geschwindigkeit.data>=5/3.6 & 0>Beschleunigung>=-4);
+    Energie_reg = trapz(Motor_regenerativ .* wirkungsgrad_getriebe(Geschwindigkeit.data>=5/3.6 & 0>Beschleunigung>=-4)) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     Energie_antrieb = trapz(Motor_antrieb ./ wirkungsgrad_getriebe) / EM.EM1.eta;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(Motorart, 'VKM')
     Energie_reg = 0;                                                                  % regenerative Energie spielt keine Rolle beim VKM

@@ -52,9 +52,9 @@ end
 
 Traegmoment_VKM_sum = sum(Traegmoment_VKM); % dann sind die Traegheitsmoment aufzusummieren
 Traegmoment_EM_sum = sum(Traegmoment_EM);
-J_Red_Ab = Traegmoment_Rad_Get_Ab + (Traegmoment_Get_An ...
+J_Rad_Ab = Traegmoment_Rad_Get_Ab + (Traegmoment_Get_An ...
     + Traegmoment_EM_sum + Traegmoment_VKM_sum) * i_F .^ 2; % reduzierte Tr¨¢egheitsmoment auf den Abtrieb [kg/m^2]
 
-lambda = 1+ (J_Red_Ab ./ ((Fahrzeug.m_F + Fahrgaeste.Data.*60) .* Rad.r_dyn^2)); % Massenzuschlagfaktor [-]
+lambda = 1+ (J_Rad_Ab ./ ((Fahrzeug.m_F + Fahrgaeste.Data.*60) .* Rad.r_dyn^2)); % Massenzuschlagfaktor [-]
 F_C = ((Fahrzeug.m_F + Fahrgaeste.Data.*60) .* lambda) .* Beschleunigung;       % Beschleunigungswiderstand [N]
 end
