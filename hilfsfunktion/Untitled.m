@@ -168,3 +168,36 @@ end
 
 
 
+
+
+
+figure
+yyaxis left
+plot(Geschwindigkeit.Data)
+yyaxis right
+plot(T_Bedarf)
+
+
+
+a = T_Bedarf>=10000 & Geschwindigkeit.Data >= 4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
