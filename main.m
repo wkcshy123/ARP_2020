@@ -18,10 +18,8 @@ Fahrzeug = Fahrzeug.(name_fahrzeug{Fahrzeug_test});
 RB = RB.(name_RB{test_RB});
 Rad = Rad.(name_Rad{Rad_test});
 Motorart = Fahrzeug.Antriebsart;
-
+load(Fahrzeug.Motorkennzeichen)                         % hier wird Motorkennfeld geladen
 load(Studycase)                                         % laden Fahrzyklusdatei
-% Daten smooth sehr wichtig, bei L-Bus vor dem Somooth 1.9kwh/km, danach
-% 1.5kwh/km Antriebenergieverbrauch
 Beschleunigung = gradient(Geschwindigkeit.data);        % die Beschleunigung berechnen 
 Wegstrecke = trapz(Geschwindigkeit.data);
 if ~exist('Fahrgaeste','var')
@@ -35,12 +33,12 @@ end
 %% Umrechnen      
 v_km_h = Geschwindigkeit.data .* 3.6;                   % Fahrzeuggeschwindigkeit in km/h [km/h]
 omega = Geschwindigkeit.data ./ Rad.r_dyn;              % Rotationsgeschwindigkeit des Rads [rad/s]%
-%[i_F, wirkungsgrad_getriebe] = schalten(Fahrzeug, v_km_h);                       % Schalten(Uebersetzung) im Fahrzyklus [-]
+%[i_F, wirkungsgrad_getriebe] = schalten(Fahrzeug, v_km_h);                      
 %[i_F, wirkungsgrad_getriebe] = schaltung1(Fahrzeug, Rad, Geschwindigkeit);
 %% Die Widerst?nde Berechnen
-F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);    % Luftwiderstand
+F_L = Luftwiderstand(Fahrzeug, RB, Geschwindigkeit);                          % Luftwiderstand
 F_R = Rollwiderstand(Fahrzeug, Rad, RB, v_km_h, Fahrgaeste, Steigung);        % Rollwiderstand
-F_St = Steigungswiderstand(Fahrzeug, RB, Fahrgaeste, Steigung);                % Steigungswiderstand
+F_St = Steigungswiderstand(Fahrzeug, RB, Fahrgaeste, Steigung);               % Steigungswiderstand
 %F_C = Beschleunigungswiderstand1(Fahrzeug, Rad, M_kupplung, VKM, EM, i_F, Beschleunigung, Fahrgaeste); % Beschleunigungswiderstand
 F_C = Beschleunigungswiderstand(Fahrzeug, Beschleunigung, Fahrgaeste);
 
@@ -48,10 +46,9 @@ F_C = Beschleunigungswiderstand(Fahrzeug, Beschleunigung, Fahrgaeste);
 F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskraft des Fahrzeugs [N]
 T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Reifenmoment des Fahrzeugs [Nm]
 P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung auf Reifen [W]
-%P_motor_unknow = Leistung(VKM, EM, Geschwindigkeit, F_Bedarf, G); 
-%[i_F, wirkungsgrad_getriebe] = schaltung2(Fahrzeug, Rad, Geschwindigkeit,T_Bedarf);
-[i_F, wirkungsgrad_getriebe] = schaltung3(Fahrzeug, Rad, Geschwindigkeit,T_Bedarf);
-%[i_F, wirkungsgrad_getriebe] = schaltung4(Fahrzeug, Rad,Geschwindigkeit,T_Bedarf);
+
+[i_F, wirkungsgrad_getriebe, wirkungsgrad_motor] = schaltung4(Fahrzeug, Rad, Geschwindigkeit,T_Bedarf, kennfeld);       % hier wird Motorkennfeld genutzt! Schalten(Uebersetzung) im Fahrzyklus [-]
+
 subplot(5,1,1);
 plot(T_Bedarf);
 title('T-Bedarf vs t in [Nm]');
@@ -77,34 +74,17 @@ xlabel('Zeit in s');
 Motor_antrieb = P_bedarf;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
 %% Motor Map zeichnen
-motorkennfeld;
 map(:,1) = omega * (60/(2*pi)) .* i_F .* Fahrzeug.i_main_reducer./10;                             % Motor Drehzahl.  (Skalierungsfaktor 10)
-map(:,2) = T_Bedarf ./ i_F ./ Fahrzeug.i_main_reducer ./ wirkungsgrad_getriebe./10./(1200/800);               % Motor Drehmoment (Skalierungsfaktor 10*1200/800)
+map(:,2) = T_Bedarf ./ i_F ./ Fahrzeug.i_main_reducer ./ wirkungsgrad_getriebe./10./(1200/850);               % Motor Drehmoment (Skalierungsfaktor 10*1200/800)
 figure
 hold on
 scatter(map(:,1),map(:,2),10)                          % Scattermap zeichnen
-contour(map1)
-%rectangle('Position', [1000,750,1500,450],'EdgeColor','r');
+contour(kennfeld)
 title('Motor map')
-ylabel('Motor torque/10 [Nm]')
+ylabel('Motor torque/10/(1200/850) [Nm]')
 xlabel('Motor speed/10 [rpm]')
 
-% if strcmp(Fahrzeug.Antriebsart, 'VKM')
-%     load VKM-map.mat
-%     ....
-%     for i=1:length(Geschwindigkeit.Data)
-%           VKM1.eta(i) = VKM_map(map(i, 1), map(i, 2));
-%     end
-% else
-%     load EM-map.mat
-%     ....
-%     for i=1:length(Geschwindigkeit.Data)
-%           ....
-%     end
-% end
 %% Motor-Energie und regerative-Energie
-% Fehlt noch Kennfeld des Motors!!!!!!!!!!!!!
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(Motorart, 'EM')
     for i=1:length(Motor_antrieb)
         if Motor_antrieb(i)<0
@@ -116,10 +96,10 @@ if strcmp(Motorart, 'EM')
     % vorraussetzung2: -4m/s^2<a<0
     Motor_regenerativ = Motor_regenerativ(Geschwindigkeit.data>=5/3.6 & 0>Beschleunigung>=-4);
     Energie_reg = trapz(Motor_regenerativ .* wirkungsgrad_getriebe(Geschwindigkeit.data>=5/3.6 & 0>Beschleunigung>=-4)) * EM.EM1.eta_reg; % regenerative Energie [ws]  (noch * eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Energie_antrieb = trapz(Motor_antrieb ./ wirkungsgrad_getriebe) / EM.EM1.eta;     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_antrieb = trapz(Motor_antrieb ./ wirkungsgrad_getriebe ./ (wirkungsgrad_motor./100));     % Antriebsenergie [ws]       (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(Motorart, 'VKM')
     Energie_reg = 0;                                                                  % regenerative Energie spielt keine Rolle beim VKM
-    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0) ./ wirkungsgrad_getriebe(Motor_antrieb > 0)) / VKM.VKM1.eta;     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Energie_antrieb = trapz(Motor_antrieb(Motor_antrieb > 0) ./ wirkungsgrad_getriebe(Motor_antrieb > 0) ./ (wirkungsgrad_motor(Motor_antrieb > 0)./100));     % Antriebsenergie [ws] (noch / eta_getriebe)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
 kmzahl = Wegstrecke / 1000;                                        % Kilometerstand [km]

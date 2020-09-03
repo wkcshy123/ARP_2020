@@ -3,9 +3,9 @@
 % 3 unter_drehmoment
 % 4 ober_drehmoment
 close
-load Data001.mat
+load('Daimler OM 936 h kurve.mat')
 
-Drehzahl_bereich = [1000,2500];             % 500 - 2500 besser
+Drehzahl_bereich = [500,2500];             % 500 - 2500 besser
 Drehmoment_bereich = [750, 1200];
 
 uebersetzung = Fahrzeug.i_Get;
