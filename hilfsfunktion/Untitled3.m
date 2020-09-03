@@ -6,7 +6,7 @@ close
 load Data001.mat
 
 Drehzahl_bereich = [1000,2500];             % 500 - 2500 besser
-Drehmoment_bereich = [700, 1200];
+Drehmoment_bereich = [750, 1200];
 
 uebersetzung = Fahrzeug.i_Get;
 mainreducer = Fahrzeug.i_main_reducer;
@@ -23,10 +23,10 @@ rectangle('Position', [a(1,1),a(3,1),(a(2,1)-a(1,1)),(a(4,1)-a(3,1))],'EdgeColor
 rectangle('Position', [a(1,2),a(3,2),(a(2,2)-a(1,2)),(a(4,2)-a(3,2))],'EdgeColor','b');
 rectangle('Position', [a(1,3),a(3,3),(a(2,3)-a(1,3)),(a(4,3)-a(3,3))],'EdgeColor','g');
 rectangle('Position', [a(1,4),a(3,4),(a(2,4)-a(1,4)),(a(4,4)-a(3,4))],'EdgeColor','c');
-text(a(1,1)+(a(2,1)-a(1,1))*0.5, a(4,1),'1.Gang i=5.3')
-text(a(1,2)+(a(2,2)-a(1,2))*0.5, a(4,2),'2.Gang i=1.43')
+text(a(1,1)+(a(2,1)-a(1,1))*0.5, a(4,1),'1.Gang i=4.9')
+text(a(1,2)+(a(2,2)-a(1,2))*0.5, a(4,2),'2.Gang i=1.36')
 text(a(1,3)+(a(2,3)-a(1,3))*0.5, a(4,3),'3.Gang i=1.0')
-text(a(1,4)+(a(2,4)-a(1,4))*0.5, a(4,4),'4.Gang i=0.7')
+text(a(1,4)+(a(2,4)-a(1,4))*0.5, a(4,4),'4.Gang i=0.73')
 a = {};
 for i=1:length(uebersetzung)   
     for j=1:length(Data001())

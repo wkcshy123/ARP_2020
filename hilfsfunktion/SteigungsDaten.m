@@ -4,7 +4,7 @@ Accumulativ_Wegstrecke = cumtrapz(Geschwindigkeit.data);
 Position.latitude = Latitude;
 Position.longitude = Longitude;
 elevationhgt = GetHgtElevation(Position);            % Höhe Daten erhalten
-schrittweit = 10;                                    % je 5 sekunden 
+schrittweit = 20;                                    % je 5 sekunden 
 for i=1:schrittweit:length(Accumulativ_Wegstrecke)
     if i+schrittweit > length(Accumulativ_Wegstrecke)
         Steigung(i,1) = atan((elevationhgt(end)-elevationhgt(i))/(Accumulativ_Wegstrecke(end)-Accumulativ_Wegstrecke(i)));

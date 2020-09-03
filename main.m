@@ -77,13 +77,17 @@ xlabel('Zeit in s');
 Motor_antrieb = P_bedarf;
 Motor_regenerativ = zeros(length(Geschwindigkeit.data),1);
 %% Motor Map zeichnen
-map(:,1) = omega * (60/(2*pi)) .* i_F .* Fahrzeug.i_main_reducer;                             % Motor Drehzahl. ((60/(2*pi)) ist der Faktor von rad/s zu rpm) 
-map(:,2) = T_Bedarf ./ i_F ./ Fahrzeug.i_main_reducer ./ wirkungsgrad_getriebe;               % Motor Drehmoment 
+motorkennfeld;
+map(:,1) = omega * (60/(2*pi)) .* i_F .* Fahrzeug.i_main_reducer./10;                             % Motor Drehzahl.  (Skalierungsfaktor 10)
+map(:,2) = T_Bedarf ./ i_F ./ Fahrzeug.i_main_reducer ./ wirkungsgrad_getriebe./10./(1200/800);               % Motor Drehmoment (Skalierungsfaktor 10*1200/800)
 figure
+hold on
 scatter(map(:,1),map(:,2),10)                          % Scattermap zeichnen
+contour(map1)
+%rectangle('Position', [1000,750,1500,450],'EdgeColor','r');
 title('Motor map')
-ylabel('Motor torque [Nm]')
-xlabel('Motor speed [rpm]')
+ylabel('Motor torque/10 [Nm]')
+xlabel('Motor speed/10 [rpm]')
 
 % if strcmp(Fahrzeug.Antriebsart, 'VKM')
 %     load VKM-map.mat
