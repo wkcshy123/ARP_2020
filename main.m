@@ -47,7 +47,7 @@ F_Bedarf = F_L + F_R + F_St + F_C;                      % notwendige Antriebskra
 T_Bedarf = F_Bedarf * Rad.r_dyn;                        % notwendige Reifenmoment des Fahrzeugs [Nm]
 P_bedarf = F_Bedarf .* Geschwindigkeit.data;            % Die notwendige Leistung auf Reifen [W]
 
-[i_F, wirkungsgrad_getriebe, wirkungsgrad_motor] = schaltung4(Fahrzeug, Rad, Geschwindigkeit,T_Bedarf, kennfeld);       % hier wird Motorkennfeld genutzt! Schalten(Uebersetzung) im Fahrzyklus [-]
+[i_F, wirkungsgrad_getriebe, wirkungsgrad_motor] = schaltung4(Fahrzeug, Rad, Geschwindigkeit, T_Bedarf, kennfeld);       % hier wird Motorkennfeld genutzt! Schalten(Uebersetzung) im Fahrzyklus [-]
 
 subplot(5,1,1);
 plot(T_Bedarf);

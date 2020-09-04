@@ -15,7 +15,7 @@ for i=1:length(Geschwindigkeit.Data)
         motordrehzahl(j) = ((Geschwindigkeit.Data(i) / Rad.r_dyn) * Fahrzeug.i_main_reducer * i_G(j)) * (60/(2*pi));   % motordehzahl in rpm 
         motordrehmoment(j) = T_Bedarf(i) / Fahrzeug.i_main_reducer / i_G(j) / Fahrzeug.eta_getriebe(j);
         try
-            wirkungsgrad_gang(j) = kennfeld(round(motordrehmoment(j)/10/(1200/850)+1),round(motordrehzahl(j)/10)+1); 
+            wirkungsgrad_gang(j) = kennfeld(round(motordrehmoment(j)/10/(1200/850))+1,round(motordrehzahl(j)/10)+1); 
         catch
             
         end
@@ -27,8 +27,11 @@ for i=1:length(Geschwindigkeit.Data)
             end
         end   
     end
-    if isequal(wirkungsgrad_gang, zeros(1,length(i_G)))
-            disp([num2str(i),' ist nicht erreichbar'])
+    wirkungsgrad_gang = fillmissing(wirkungsgrad_gang, 'constant', 0);
+    if isequal(wirkungsgrad_gang, zeros(1,length(i_G))) 
+            disp(['Das Zustand in ',num2str(i),'th Zeitpunkt ist nicht erreichbar!'])
+            disp(['MotorDrehzahl[rpm] in jedem Gang [1-4] ',newline ,num2str(motordrehzahl)])
+            disp(['MotorDrehmoment[Nm] in jedem Gang [1-4] ',newline ,num2str(motordrehmoment)])
     end
 end
 figure
