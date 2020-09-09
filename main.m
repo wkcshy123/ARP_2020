@@ -28,7 +28,7 @@ end
 %% Steigungsdaten
 Steigung = zeros(length(Geschwindigkeit.data),1);
 if exist('Latitude','var')
-    Steigung = SteigungsDaten(Geschwindigkeit, Latitude, Longitude);
+    [Steigung, Hoehe] = SteigungsDaten(Geschwindigkeit, Latitude, Longitude);
 end
 %% Umrechnen      
 v_km_h = Geschwindigkeit.data .* 3.6;                   % Fahrzeuggeschwindigkeit in km/h [km/h]

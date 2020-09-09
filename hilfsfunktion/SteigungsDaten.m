@@ -1,4 +1,4 @@
-function Steigung = SteigungsDaten(Geschwindigkeit, Latitude, Longitude)
+function [Steigung, elevationhgt] = SteigungsDaten(Geschwindigkeit, Latitude, Longitude)
 Steigung = zeros(length(Geschwindigkeit.data),1);
 Accumulativ_Wegstrecke = cumtrapz(Geschwindigkeit.data);
 Position.latitude = Latitude;
