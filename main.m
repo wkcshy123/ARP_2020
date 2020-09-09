@@ -1,7 +1,7 @@
 clear all
 clc
 close all
-% Motorkennfeld!!!!!!!
+
 %% Die Datei Laden
 start = 1;
 test_RB = 1;
