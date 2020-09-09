@@ -25,6 +25,7 @@ Wegstrecke = trapz(Geschwindigkeit.data);
 if ~exist('Fahrgaeste','var')
     Fahrgaeste = timeseries(12, Geschwindigkeit.Time);  % Fahrgästeanzahl   [-]
 end
+
 %% Steigungsdaten
 Steigung = zeros(length(Geschwindigkeit.data),1);
 if exist('Latitude','var')
