@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
+
 def bus_speed_visullisation(path):
     sns.set()
     df = pd.read_csv(path, sep=';')
